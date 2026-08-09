@@ -19,5 +19,8 @@ senha = "Teste@12345678"
 hash_gerado = senha_hash(senha)
 
 print(hash_gerado)
-print(verificar_senha(senha, hash_gerado))
+print(verificar_senha(senha, senha_hash))
+
+
+      
 
