@@ -12,14 +12,6 @@ from auth.security import senha_hash, verificar_senha
 #         raise ValueError ("Esse email já esta cadastrado")
 #     db_banc_conn.close()
 
-from auth.security import senha_hash, verificar_senha
-
-senha = "Teste@12345678"
-
-hash_gerado = senha_hash(senha)
-
-print(hash_gerado)
-print(verificar_senha(senha, senha_hash))
 
 
       
