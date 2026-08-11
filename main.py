@@ -11,4 +11,3 @@ app.include_router(order_routers)
 """ comando para rodar a minha api :
         uvicorn main:app --reload
 """
-""

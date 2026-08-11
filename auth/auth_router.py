@@ -3,6 +3,8 @@ from schemas import UsuarioSchema, LoginSchema
 from conection_banco import get_db
 from psycopg2.extensions import connection
 from auth.security import senha_hash, pwt_context, verificar_senha
+from auth.jwt import criar_token
+
 auth_routers = APIRouter(prefix="/auth", tags=["Autenticacao"])
 
 
@@ -73,14 +75,24 @@ async def login_user( usuario : LoginSchema, db: connection = Depends(get_db)):
             status_code=401,
             detail="Email ou senha inválidas"
         )
-    return{
-        "mensagem": "Login realizado com sucesso",
-        "Usuário": {
-            "id": usuario_banco[0],
-            "nome": usuario_banco[1],
-            "email": usuario_banco[3]
-        }
+
+    token = criar_token(
+        usuario_banco[0]
+        )
+
+    return {
+        "access_token": token,
+        "token_type": "bearer"
     }
+
+    # return{
+    #     "mensagem": "Login realizado com sucesso",
+    #     "Usuário": {
+    #         "id": usuario_banco[0],
+    #         "nome": usuario_banco[1],
+    #         "email": usuario_banco[3]
+    #     }
+    # }
     
         
 #Verificação de cadastro e compra de carros

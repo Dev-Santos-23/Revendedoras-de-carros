@@ -1,13 +1,16 @@
 from fastapi import APIRouter, Depends
 from psycopg2.extensions import connection
 from conection_banco import get_db
+from auth.jwt import get_current_user
 
 
 order_routers = APIRouter(prefix="/order", tags=["Pedido"])
 
 @order_routers.get("/Carros_a_venda")
-async def pedido_carros_banco(db: connection = Depends(get_db)):
-    from time import sleep
+async def pedido_carros_banco(
+    db: connection = Depends(get_db),
+    user_id : int = Depends(get_current_user)
+    ):
 
     cursor = db.cursor()
     cursor.execute(
