@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
-from schemas import UsuarioSchema, LoginSchema
+from schemas import UsuarioSchema, LoginSchema, CompraSchema
 from conection_banco import get_db
 from psycopg2.extensions import connection
 from auth.security import senha_hash, pwt_context, verificar_senha
-from auth.jwt import criar_token
+from auth.jwt import criar_token, get_current_user
 
 auth_routers = APIRouter(prefix="/auth", tags=["Autenticacao"])
 
@@ -31,7 +31,96 @@ def buscar_email_usuario(email: str, db):
     usuario = cursor.fetchone()
     cursor.close()
 
-    return usuario   
+    return usuario 
+
+#Buscando carro no Banco
+def buscar_carro(id_carro: int, db: connection = Depends(get_db)):
+    cursor = db.cursor()
+    cursor.execute(
+        """SELECT cor, marca, modelo, preco 
+        FROM registro_carros 
+        WHERE id = %s""",
+        (id_carro,)
+    )
+
+    carro = cursor.fetchone()
+    cursor.close()
+
+    return carro
+
+#inserindo carro comprado no historico
+def insert_car_in_historic(
+        id_compra: int,
+        carro_id : int, db: connection
+        ):
+    cursor = db.cursor()
+    cursor.execute(
+        """ SELECT * from registro_carros
+            WHERE id = %s
+        """,
+        (carro_id,)
+    )
+
+    carro = cursor.fetchone()
+
+    if carro is None:
+        cursor.close()
+        raise ValueError("Carro não encontrado!")
+
+    cursor.execute (
+        """
+        INSERT INTO historico_de_carros_comprados(
+        id_compra,
+        id_carro_original,
+        cor,
+        marca,
+        modelo,
+        ano_de_fabricacao,
+        preco,
+        quilometragem,
+        combustivel,
+        cambio)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """,
+        (
+          id_compra, carro[0], carro[1], carro[2], carro[3], carro[4],
+          carro[5], carro[6], carro[7], carro[8]
+          )
+    )
+
+    cursor.execute(
+        """ DELETE FROM registro_carros
+            WHERE id = %s
+        """,
+        (carro_id,)
+    ) 
+    ...
+
+#Inserindo compra no banco
+def insert_car_banc(
+    user_id: int,
+    carro_id: int,
+    db: connection
+):
+    cursor = db.cursor()
+
+    cursor.execute(
+        """
+        INSERT INTO compras_ (user_id, id_carro)
+        VALUES (%s, %s)
+        RETURNING id
+        """,
+        (user_id, carro_id)
+    )
+
+    id_compra = cursor.fetchone()[0]
+
+    cursor.close()
+
+    return id_compra
+
+
+#deletando carros
 
 #Adicionando usuários no banco e validando email
 @auth_routers.post("/create_usuario")
@@ -85,18 +174,56 @@ async def login_user( usuario : LoginSchema, db: connection = Depends(get_db)):
         "token_type": "bearer"
     }
 
-    # return{
-    #     "mensagem": "Login realizado com sucesso",
-    #     "Usuário": {
-    #         "id": usuario_banco[0],
-    #         "nome": usuario_banco[1],
-    #         "email": usuario_banco[3]
-    #     }
-    # }
-    
         
 #Verificação de cadastro e compra de carros
+auth_routers.post("/comprar_automóvel")
+async def buy_car(
+        compra : CompraSchema,
+        bd : connection = Depends(get_db),
+        user_id : int = Depends(get_current_user)
+    ):
 
-auth_routers.post("/Compra_automoveis")
-async def buy_car(usuario : UsuarioSchema, bd : connection = Depends(get_db)):
-    ...
+    try:
+        carro = buscar_carro(compra.id_carro, bd)
+
+        if carro is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Carro não encontrado"
+            )
+
+        id_compra = insert_car_banc (
+            user_id,
+            compra.id_carro,
+            bd
+        )
+
+        insert_car_in_historic(
+            id_compra,
+            compra.id_carro,
+            bd
+            )
+
+        bd.commit()
+
+        return {
+            "Mensagem": "Compra realizada com sucesso!",
+            "usuario_id": user_id,
+            "carro" : {
+                "modelo" : carro[2],
+                "marca" : carro[1],
+                "cor": carro[0],
+                "preco" : carro[3],
+            }
+        }
+    except HTTPException:
+        bd.rollback()
+        raise
+
+    except Exception:
+        bd.rollback()
+        raise HTTPException (
+            status_code=400,
+            detail="Erro ao realizar a compra"
+        )
+    

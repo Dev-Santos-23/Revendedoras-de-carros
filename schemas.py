@@ -115,3 +115,9 @@ class LoginSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
+class CompraSchema(BaseModel):
+    id_carro : int
+
+    class Config:
+        from_attributes = True

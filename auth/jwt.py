@@ -58,4 +58,3 @@ def get_current_user(
     user_id = verificar_token(token)
 
     return user_id
-    
