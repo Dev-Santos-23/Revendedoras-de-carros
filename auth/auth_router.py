@@ -39,7 +39,9 @@ def buscar_carro(id_carro: int, db: connection = Depends(get_db)):
     cursor.execute(
         """SELECT cor, marca, modelo, preco 
         FROM registro_carros 
-        WHERE id = %s""",
+        WHERE id = %s
+        AND disponivel = true 
+        """,
         (id_carro,)
     )
 
@@ -89,28 +91,29 @@ def insert_car_in_historic(
     )
 
     cursor.execute(
-        """ DELETE FROM registro_carros
-            WHERE id = %s
+        """
+        UPDATE registro_carros
+        SET disponivel = FALSE
+        WHERE id = %s
         """,
         (carro_id,)
-    ) 
+)
     ...
 
 #Inserindo compra no banco
 def insert_car_banc(
     user_id: int,
-    carro_id: int,
     db: connection
 ):
     cursor = db.cursor()
 
     cursor.execute(
         """
-        INSERT INTO compras_ (user_id, id_carro)
-        VALUES (%s, %s)
+        INSERT INTO compras_ (id_usuario)
+        VALUES (%s)
         RETURNING id
         """,
-        (user_id, carro_id)
+        (user_id,)
     )
 
     id_compra = cursor.fetchone()[0]
@@ -119,6 +122,22 @@ def insert_car_banc(
 
     return id_compra
 
+def adicionar_carro_compra(
+    id_compra: int,
+    id_carro: int,
+    db: connection
+):
+    cursor = db.cursor()
+
+    cursor.execute(
+        """
+        INSERT INTO compra_carros (id_compra, id_carro)
+        VALUES (%s, %s)
+        """,
+        (id_compra, id_carro)
+    )
+
+    cursor.close()
 
 #deletando carros
 
@@ -176,7 +195,7 @@ async def login_user( usuario : LoginSchema, db: connection = Depends(get_db)):
 
         
 #Verificação de cadastro e compra de carros
-auth_routers.post("/comprar_automóvel")
+@auth_routers.post("/comprar_automóvel")
 async def buy_car(
         compra : CompraSchema,
         bd : connection = Depends(get_db),
@@ -194,6 +213,12 @@ async def buy_car(
 
         id_compra = insert_car_banc (
             user_id,
+            bd
+        )
+
+
+        adicionar_carro_compra(
+            id_compra,
             compra.id_carro,
             bd
         )
@@ -220,10 +245,8 @@ async def buy_car(
         bd.rollback()
         raise
 
-    except Exception:
+    except Exception as e :
         bd.rollback()
-        raise HTTPException (
-            status_code=400,
-            detail="Erro ao realizar a compra"
-        )
+        print("Erro:", e)
+        raise
     

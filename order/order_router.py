@@ -38,4 +38,3 @@ async def pedido_carros_banco(
         "Estoque de carros":
         resultado
     }
-
