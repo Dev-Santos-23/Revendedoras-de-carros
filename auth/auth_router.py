@@ -4,142 +4,9 @@ from conection_banco import get_db
 from psycopg2.extensions import connection
 from auth.security import senha_hash, pwt_context, verificar_senha
 from auth.jwt import criar_token, get_current_user
+from func_in_the_banc import consulta_banco, buscar_carro,buscar_email_usuario, insert_car_banc, insert_car_in_historic, adicionar_carro_compra
 
 auth_routers = APIRouter(prefix="/auth", tags=["Autenticacao"])
-
-
-#Verifica no banco se email ja está cadastrado
-def consulta_banco(usuario_email, db_banc: connection = Depends(get_db)):
-    db_banc_conn = db_banc.cursor()
-    db_banc_conn.execute(
-        "SELECT 1 FROM usuarios WHERE email = %s", (usuario_email,)
-    )
-    resultado = db_banc_conn.fetchone() 
-    db_banc_conn.close()
-    return resultado is not None
-
-def buscar_email_usuario(email: str, db):
-    cursor = db.cursor()
-    cursor.execute(
-        """ SELECT id, nome, telefone, email, senha 
-            FROM usuarios
-            WHERE email = %s
-        """,
-        (email,)
-    )
-
-    usuario = cursor.fetchone()
-    cursor.close()
-
-    return usuario 
-
-#Buscando carro no Banco
-def buscar_carro(id_carro: int, db: connection = Depends(get_db)):
-    cursor = db.cursor()
-    cursor.execute(
-        """SELECT cor, marca, modelo, preco 
-        FROM registro_carros 
-        WHERE id = %s
-        AND disponivel = true 
-        """,
-        (id_carro,)
-    )
-
-    carro = cursor.fetchone()
-    cursor.close()
-
-    return carro
-
-#inserindo carro comprado no historico
-def insert_car_in_historic(
-        id_compra: int,
-        carro_id : int, db: connection
-        ):
-    cursor = db.cursor()
-    cursor.execute(
-        """ SELECT * from registro_carros
-            WHERE id = %s
-        """,
-        (carro_id,)
-    )
-
-    carro = cursor.fetchone()
-
-    if carro is None:
-        cursor.close()
-        raise ValueError("Carro não encontrado!")
-
-    cursor.execute (
-        """
-        INSERT INTO historico_de_carros_comprados(
-        id_compra,
-        id_carro_original,
-        cor,
-        marca,
-        modelo,
-        ano_de_fabricacao,
-        preco,
-        quilometragem,
-        combustivel,
-        cambio)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """,
-        (
-          id_compra, carro[0], carro[1], carro[2], carro[3], carro[4],
-          carro[5], carro[6], carro[7], carro[8]
-          )
-    )
-
-    cursor.execute(
-        """
-        UPDATE registro_carros
-        SET disponivel = FALSE
-        WHERE id = %s
-        """,
-        (carro_id,)
-)
-    ...
-
-#Inserindo compra no banco
-def insert_car_banc(
-    user_id: int,
-    db: connection
-):
-    cursor = db.cursor()
-
-    cursor.execute(
-        """
-        INSERT INTO compras_ (id_usuario)
-        VALUES (%s)
-        RETURNING id
-        """,
-        (user_id,)
-    )
-
-    id_compra = cursor.fetchone()[0]
-
-    cursor.close()
-
-    return id_compra
-
-def adicionar_carro_compra(
-    id_compra: int,
-    id_carro: int,
-    db: connection
-):
-    cursor = db.cursor()
-
-    cursor.execute(
-        """
-        INSERT INTO compra_carros (id_compra, id_carro)
-        VALUES (%s, %s)
-        """,
-        (id_compra, id_carro)
-    )
-
-    cursor.close()
-
-#deletando carros
 
 #Adicionando usuários no banco e validando email
 @auth_routers.post("/create_usuario")
@@ -192,8 +59,7 @@ async def login_user( usuario : LoginSchema, db: connection = Depends(get_db)):
         "access_token": token,
         "token_type": "bearer"
     }
-
-        
+      
 #Verificação de cadastro e compra de carros
 @auth_routers.post("/comprar_automóvel")
 async def buy_car(

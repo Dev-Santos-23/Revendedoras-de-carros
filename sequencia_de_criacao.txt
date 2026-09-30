@@ -1,8 +1,0 @@
-----Projeto:
-    Primeiras etapas de criação e validação de usuários:
-        etapa de criação feita.
-        Validações feita com sucessos.
-    Segunda etapa: Etapa de vizualização do carros do banco
-        Etapa de vizualização concluída
-    terceira atapa: Compra de carros e registro no banco
-        
