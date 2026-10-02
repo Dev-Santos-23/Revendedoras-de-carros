@@ -169,3 +169,59 @@ def carros_disponiveis_para_compra(bd):
         "Carros disponiveis para comprar":
         resultado
     }
+
+def buscar_um_carro(id_car, db):
+    cursor_db = db.cursor()
+    cursor_db.execute(
+        """
+        SELECT * FROM registro_carros
+        WHERE id = %s AND disponivel = TRUE
+        """,
+        (id_car,)
+    )
+
+    carro = cursor_db.fetchone()
+    cursor_db.close()
+
+    if carro is None:
+        return None
+
+    return {
+        "Carro encontrado": {
+            "ID": carro[0],
+            "Cor": carro[1],
+            "Marca": carro[2],
+            "Nome": carro[3],
+            "Ano de Fabricação": carro[4],
+            "Preço": float(carro[5]),
+            "Quilometragem": carro[6],
+            "Combustível": carro[7],
+            "Câmbio": carro[8],
+            "disponivel": carro[10],
+        }
+    }
+
+def consulta_compras_de_um_usuario( db):
+    cursor_db = db.cursor()
+    cursor_db.execute(
+        """
+        SELECT 
+        usuarios.nome,
+        compras_.id AS compra_id,
+        registro_carros.marca,
+        registro_carros.modelo,
+        registro_carros.preco
+        FROM compras_
+        JOIN usuarios
+        ON compras_.id_usuario = usuarios.id
+        JOIN compra_carros
+        ON compra_carros.id_compra = compras_.id
+        JOIN registro_carros
+        ON compra_carros.id_carro = registro_carros.id;
+        """
+    )
+
+    compras_usuarios = cursor_db.fetchall()
+    cursor_db.close()
+
+    return compras_usuarios
