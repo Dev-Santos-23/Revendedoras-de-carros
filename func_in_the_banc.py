@@ -225,3 +225,32 @@ def consulta_compras_de_um_usuario( db):
     cursor_db.close()
 
     return compras_usuarios
+
+def consulta_carros_comprados(db):
+    db_cursor = db.cursor()
+    db_cursor.execute(
+        """
+        SELECT * FROM historico_de_carros_comprados;
+        """
+    )
+
+    carros = db_cursor.fetchone()
+    db_cursor.close()
+
+    if carros is None:
+        return None
+
+    return {
+        "Carros encontrado": {
+            "ID": carros[2],
+            "Cor": carros[3],
+            "Marca": carros[4],
+            "Nome": carros[5],
+            "Ano de Fabricação": carros[6],
+            "Preço": float(carros[7]),
+            "Quilometragem": carros[8],
+            "Combustível": carros[9],
+            "Câmbio": carros[10],
+        }
+    }
+

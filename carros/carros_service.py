@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from conection_banco import get_db
 from psycopg2.extensions import connection
 from auth.jwt import get_current_user
-from func_in_the_banc import carros_disponiveis_para_compra, buscar_um_carro, consulta_compras_de_um_usuario
+from func_in_the_banc import carros_disponiveis_para_compra, buscar_um_carro, consulta_compras_de_um_usuario, consulta_carros_comprados
 
 car_routers = APIRouter(prefix="/carros", tags=["Listagem"])
 
@@ -38,4 +38,17 @@ def carro_unico(
 def buscar_usario_compras(db: connection = Depends(get_db)):
 
     return consulta_compras_de_um_usuario(db)
-    ...
+
+#consultando carros comprados
+@car_routers.get("/Registro_de_carros_comprados")
+def registro_de_cars(db: connection = Depends(get_db)):
+
+    carro = consulta_carros_comprados(db)
+
+    if carro is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Nenhuma compra realizada até o momento!"
+        )
+
+    return carro

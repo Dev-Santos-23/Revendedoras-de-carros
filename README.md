@@ -2,7 +2,7 @@ etapas a serem complidas:
 
     endpoint para listar carros disponíveis; V
     endpoint para buscar um carro específico; V
-    endpoint para consultar as compras de um usuário;
+    endpoint para consultar as compras de um usuário; V
     endpoint para consultar o histórico de carros comprados;
     impedir compra de carro que já esteja disponivel = FALSE;
     melhorar tratamento de erros;
