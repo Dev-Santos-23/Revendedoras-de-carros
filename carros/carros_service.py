@@ -45,7 +45,7 @@ def registro_de_cars(db: connection = Depends(get_db)):
 
     carro = consulta_carros_comprados(db)
 
-    if carro is None:
+    if carro is []:
         raise HTTPException(
             status_code=404,
             detail="Nenhuma compra realizada até o momento!"
@@ -53,15 +53,4 @@ def registro_de_cars(db: connection = Depends(get_db)):
 
     return carro
 
-def carros_indisponiveis_para_compra(db):
-    db_curdor = db.cursor()
-    db_curdor.execute(
-        """
-        SELECT * FROM historico_de_carros_comprados
-        """
-    )
-    carros = db_curdor.fetchone()
-    db_curdor.close()
 
-    if carros is None:
-        return None

@@ -121,3 +121,24 @@ class CompraSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
+class CarroResponse(BaseModel):
+    id: int
+    cor: str
+    marca: str
+    modelo: str
+    ano_de_fabricacao: int
+    preco: float
+    quilometragem: int
+    combustivel: str
+    cambio: str
+    disponivel: bool
+
+class CompraResponse(BaseModel):
+    mensagem: str
+    usuario_id: int
+    carro: CarroResponse
+
+class MensagemResponse(BaseModel):
+    mensagem: str
+    

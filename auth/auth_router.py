@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from schemas import UsuarioSchema, LoginSchema, CompraSchema
+from schemas import UsuarioSchema, LoginSchema, CompraSchema, CompraResponse
 from conection_banco import get_db
 from psycopg2.extensions import connection
 from auth.security import senha_hash, pwt_context, verificar_senha
@@ -61,7 +61,10 @@ async def login_user( usuario : LoginSchema, db: connection = Depends(get_db)):
     }
       
 #Verificação de cadastro e compra de carros
-@auth_routers.post("/comprar_automóvel")
+@auth_routers.post(
+        "/comprar_automóvel",
+          response_model=CompraResponse
+        )
 async def buy_car(
         compra : CompraSchema,
         bd : connection = Depends(get_db),
@@ -77,9 +80,9 @@ async def buy_car(
                 detail="Carro não encontrado"
             )
 
-        if carro[4] is False:
+        if carro[8] is False:
             raise HTTPException(
-                status_code=404,
+                status_code=409,
                 detail="Carro indisponivel para compra"
             )
 
@@ -103,16 +106,23 @@ async def buy_car(
 
         bd.commit()
 
-        return {
-            "Mensagem": "Compra realizada com sucesso!",
-            "usuario_id": user_id,
-            "carro" : {
-                "modelo" : carro[2],
-                "marca" : carro[1],
-                "cor": carro[0],
-                "preco" : carro[3],
+        return {   
+        "mensagem": "Compra realizada com sucesso!",
+        "usuario_id": user_id,
+        "carro": {
+            "id": compra.id_carro,
+            "cor": carro[0],
+            "marca": carro[1],
+            "modelo": carro[2],
+            "ano_de_fabricacao": carro[3],
+            "preco": carro[4],
+            "quilometragem": carro[5],
+            "combustivel": carro[6],
+            "cambio": carro[7],
+            "disponivel": False
             }
         }
+    
     except HTTPException:
         bd.rollback()
         raise

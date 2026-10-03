@@ -35,7 +35,7 @@ def buscar_email_usuario(email: str, db):
 def buscar_carro(id_carro: int, db: connection = Depends(get_db)):
     cursor = db.cursor()
     cursor.execute(
-        """SELECT cor, marca, modelo, preco, disponivel
+        """SELECT cor, marca, modelo,ano_de_fabricacao, preco, quilometragem, combustivel, cambio, disponivel
         FROM registro_carros 
         WHERE id = %s
         """,
@@ -235,24 +235,29 @@ def consulta_carros_comprados(db):
         """
     )
 
-    carros = db_cursor.fetchone()
+    carros = db_cursor.fetchall()
     db_cursor.close()
 
     if carros is None:
-        return None
+        return []
 
+    resultado = [
+            {
+                "ID": carro[2],
+                "Cor": carro[3],
+                "Marca": carro[4],
+                "Nome": carro[5],
+                "Ano de Fabricação": carro[6],
+                "Preço": float(carro[7]),
+                "Quilometragem": carro[8],
+                "Combustível": carro[9],
+                "Câmbio": carro[10],
+            }
+        for carro in carros
+        ]
+    
     return {
-        "Carros encontrado": {
-            "ID": carros[2],
-            "Cor": carros[3],
-            "Marca": carros[4],
-            "Nome": carros[5],
-            "Ano de Fabricação": carros[6],
-            "Preço": float(carros[7]),
-            "Quilometragem": carros[8],
-            "Combustível": carros[9],
-            "Câmbio": carros[10],
-        }
+        "Carros comprados ":
+        resultado
     }
-
 

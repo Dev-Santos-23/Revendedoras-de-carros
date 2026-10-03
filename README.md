@@ -3,8 +3,8 @@ etapas a serem complidas:
     endpoint para listar carros disponíveis; V
     endpoint para buscar um carro específico; V
     endpoint para consultar as compras de um usuário; V
-    endpoint para consultar o histórico de carros comprados;
-    impedir compra de carro que já esteja disponivel = FALSE;
+    endpoint para consultar o histórico de carros comprados; V
+    impedir compra de carro que já esteja disponivel = FALSE; V
     melhorar tratamento de erros;
     separar router, services e funções de acesso ao banco;
     criar schemas específicos para request/response;
