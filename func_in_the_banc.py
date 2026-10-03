@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from conection_banco import get_db
 from psycopg2.extensions import connection
 
@@ -35,10 +35,9 @@ def buscar_email_usuario(email: str, db):
 def buscar_carro(id_carro: int, db: connection = Depends(get_db)):
     cursor = db.cursor()
     cursor.execute(
-        """SELECT cor, marca, modelo, preco 
+        """SELECT cor, marca, modelo, preco, disponivel
         FROM registro_carros 
         WHERE id = %s
-        AND disponivel = true 
         """,
         (id_carro,)
     )
@@ -47,6 +46,7 @@ def buscar_carro(id_carro: int, db: connection = Depends(get_db)):
     cursor.close()
 
     return carro
+
 
 #inserindo carro comprado no historico
 def insert_car_in_historic(
@@ -66,6 +66,7 @@ def insert_car_in_historic(
     if carro is None:
         cursor.close()
         raise ValueError("Carro não encontrado!")
+    
 
     cursor.execute (
         """
@@ -253,4 +254,5 @@ def consulta_carros_comprados(db):
             "Câmbio": carros[10],
         }
     }
+
 

@@ -77,6 +77,12 @@ async def buy_car(
                 detail="Carro não encontrado"
             )
 
+        if carro[4] is False:
+            raise HTTPException(
+                status_code=404,
+                detail="Carro indisponivel para compra"
+            )
+
         id_compra = insert_car_banc (
             user_id,
             bd
@@ -115,4 +121,4 @@ async def buy_car(
         bd.rollback()
         print("Erro:", e)
         raise
-    
+
