@@ -171,6 +171,38 @@ def carros_disponiveis_para_compra(bd):
         resultado
     }
 
+def consulta_carros_disponiveis(db, pagina: int, limite: int):
+    offset = (pagina - 1) * limite
+
+    cursor = db.cursor()
+
+    cursor.execute(
+        """
+        SELECT
+            id,
+            cor,
+            marca,
+            modelo,
+            ano_de_fabricacao,
+            preco,
+            quilometragem,
+            combustivel,
+            cambio,
+            disponivel
+        FROM registro_carros
+        WHERE disponivel = TRUE
+        ORDER BY id
+        LIMIT %s OFFSET %s
+        """,
+        (limite, offset)
+    )
+
+    carros = cursor.fetchall()
+    cursor.close()
+
+    return carros
+
+
 def buscar_um_carro(id_car, db):
     cursor_db = db.cursor()
     cursor_db.execute(

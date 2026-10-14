@@ -1,19 +1,52 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from conection_banco import get_db
 from psycopg2.extensions import connection
 from auth.jwt import get_current_user
-from func_in_the_banc import carros_disponiveis_para_compra, buscar_um_carro, consulta_compras_de_um_usuario, consulta_carros_comprados
+from func_in_the_banc import carros_disponiveis_para_compra, buscar_um_carro, consulta_compras_de_um_usuario, consulta_carros_comprados, consulta_carros_disponiveis
 
 car_routers = APIRouter(prefix="/carros", tags=["Listagem"])
 
 #Listar carros disponiveis
-@car_routers.get("/Carros_Disponiveis")
-def carros_disponiveis(
-    # user_id: int = Depends(get_current_user),
-    db: connection = Depends(get_db)
-    ):
+# @car_routers.get("/Carros_Disponiveis")
+# def carros_disponiveis(
+#     # user_id: int = Depends(get_current_user),
+#     db: connection = Depends(get_db)
+#     ):
 
-    return carros_disponiveis_para_compra(db)
+#     return carros_disponiveis_para_compra(db)
+
+
+@car_routers.get("/Carros_Disponiveis")
+def listar_carros(
+    pagina: int = Query(1, ge=1),
+    limite: int = Query(10, ge=1, le=100),
+    db: connection = Depends(get_db)
+):
+    carros = consulta_carros_disponiveis(
+        db,
+        pagina,
+        limite
+    )
+
+    return {
+        "pagina": pagina,
+        "limite": limite,
+        "carros": [
+            {
+                "id": carro[0],
+                "cor": carro[1],
+                "marca": carro[2],
+                "modelo": carro[3],
+                "ano_de_fabricacao": carro[4],
+                "preco": float(carro[5]),
+                "quilometragem": carro[6],
+                "combustivel": carro[7],
+                "cambio": carro[8],
+                "disponivel": carro[9]
+            }
+            for carro in carros
+        ]
+    }
 
 
 #buscar um carro específico
